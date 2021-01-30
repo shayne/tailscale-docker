@@ -1,0 +1,43 @@
+name: Build Tailscale Docker image
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tailscale-version.txt'
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Read latest release tag
+        id: read-tag
+        run: |
+          echo ::set-output name=tag::$(curl -sL https://raw.githubusercontent.com/shayne/tailscale-docker/main/tailscale-version.txt)
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: 'tailscale/tailscale'
+          ref: ${{ steps.read-tag.outputs.tag }}
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Run build script
+        run: |
+          curl -sL https://raw.githubusercontent.com/shayne/tailscale-docker/main/dockerfile-patch | git apply
+          ./build_docker.sh
+          semver=$(echo ${{ steps.read-tag.outputs.tag }} |  cut -c2-)
+          docker tag tailscale:tailscale ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:latest
+          docker tag tailscale:tailscale ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:${semver}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:${semver}
