@@ -34,7 +34,6 @@ jobs:
       -
         name: Run build script
         run: |
-          curl -sL https://raw.githubusercontent.com/shayne/tailscale-docker/main/dockerfile-patch | git apply
           ./build_docker.sh
           semver=$(echo ${{ steps.read-tag.outputs.tag }} |  cut -c2-)
           docker tag tailscale:tailscale ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:latest
