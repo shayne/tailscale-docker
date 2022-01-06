@@ -36,9 +36,4 @@ jobs:
       -
         name: Run build script
         run: |
-          ./build_docker.sh
-          semver=$(echo ${{ steps.read-tag.outputs.tag }} |  cut -c2-)
-          docker tag tailscale:tailscale ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:latest
-          docker tag tailscale:tailscale ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:${semver}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tailscale:${semver}
+          REPOS=${{ secrets.DOCKERHUB_USERNAME }}/tailscale ./build_docker.sh
